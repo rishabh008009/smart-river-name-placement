@@ -17,6 +17,42 @@ export class CanvasRenderer {
    */
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    // Reset any transformations
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+
+  /**
+   * Calculate and apply transformation to fit river in canvas
+   * @param {RiverPath} path
+   */
+  fitToCanvas(path) {
+    if (!path || !path.bounds) return;
+
+    const bounds = path.bounds;
+    const padding = 40;
+
+    // Calculate data dimensions
+    const dataWidth = bounds.maxX - bounds.minX;
+    const dataHeight = bounds.maxY - bounds.minY;
+
+    // Calculate available canvas space
+    const availableWidth = this.canvas.width - 2 * padding;
+    const availableHeight = this.canvas.height - 2 * padding;
+
+    // Calculate scale to fit (maintain aspect ratio)
+    const scaleX = availableWidth / dataWidth;
+    const scaleY = availableHeight / dataHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    // Calculate offsets to center
+    const scaledWidth = dataWidth * scale;
+    const scaledHeight = dataHeight * scale;
+    const offsetX = padding + (availableWidth - scaledWidth) / 2 - bounds.minX * scale;
+    const offsetY = padding + (availableHeight - scaledHeight) / 2 - bounds.minY * scale;
+
+    // Apply transformation
+    this.ctx.translate(offsetX, offsetY);
+    this.ctx.scale(scale, scale);
   }
 
   /**
@@ -28,6 +64,9 @@ export class CanvasRenderer {
     if (!path || !path.points || path.points.length < 2) {
       return;
     }
+
+    // Apply transformation to fit river in canvas
+    this.fitToCanvas(path);
 
     const {
       color = '#2196F3',

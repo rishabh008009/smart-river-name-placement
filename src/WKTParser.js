@@ -14,11 +14,14 @@ export class WKTParser {
       throw new Error('Invalid WKT string');
     }
 
-    // Remove whitespace and normalize
-    const normalized = wktString.trim();
+    // Remove all line breaks and normalize whitespace
+    const normalized = wktString
+      .replace(/\r?\n/g, ' ')  // Replace line breaks with spaces
+      .replace(/\s+/g, ' ')     // Replace multiple spaces with single space
+      .trim();
 
     // Check if it's a POLYGON
-    if (!normalized.startsWith('POLYGON')) {
+    if (!normalized.toUpperCase().startsWith('POLYGON')) {
       throw new Error('Only POLYGON geometry is supported');
     }
 

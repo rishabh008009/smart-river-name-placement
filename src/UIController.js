@@ -38,13 +38,19 @@ export class UIController {
     try {
       const startTime = performance.now();
       
+      console.log('Loading WKT file from:', filePath);
+      
       // Fetch the WKT file
       const response = await fetch(filePath);
+      console.log('Fetch response:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error(`Failed to load WKT file: ${response.statusText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const wktString = await response.text();
+      console.log('WKT string length:', wktString.length);
+      console.log('WKT preview:', wktString.substring(0, 100));
       
       // Parse WKT data
       this.currentRiver = this.parser.parse(wktString);
@@ -53,6 +59,8 @@ export class UIController {
         throw this.currentRiver;
       }
       
+      console.log('Parsed river:', this.currentRiver);
+      
       this.currentRiverName = 'Hackathon River';
       
       // Run the full pipeline
@@ -60,6 +68,7 @@ export class UIController {
       
       this.clearError();
     } catch (error) {
+      console.error('WKT loading error:', error);
       this.displayError(`Failed to load WKT file: ${error.message}`);
     }
   }
