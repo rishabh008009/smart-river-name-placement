@@ -1,3 +1,6 @@
+/* =====================
+   Base Reset & Theme
+===================== */
 * {
     margin: 0;
     padding: 0;
@@ -189,36 +192,13 @@ canvas {
 }
 
 /* =====================
-   METRICS (COMPACT)
+   METRICS BAR (COMPACT)
 ===================== */
-.metrics-section {
-    flex-shrink: 0;
-}
-
-.metrics-toggle {
-    padding: 0.45rem 0.75rem;
-    font-size: 0.8rem;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-.metrics-content {
-    max-height: 0;
-    overflow-y: auto;
-}
-
-#metrics-panel {
-    padding: 0.75rem;
-    font-size: 0.75rem;
-}
-
 .metrics-bar {
     display: grid;
-    grid-template-columns: repeat(6, max-content); /* 🔥 fixed column width */
-    column-gap: 4rem;                               /* 🔥 constant gap */
-    justify-content: center;                        /* 🔥 center whole row */
+    grid-template-columns: repeat(6, max-content);
+    column-gap: 4rem;
+    justify-content: center;
 
     padding: 0.5rem 0.75rem;
     background: linear-gradient(135deg, #f5f7fa, #e3e7ed);
@@ -234,14 +214,11 @@ canvas {
     gap: 0.2rem;
 }
 
-
 .metric-title {
     font-weight: 700;
     font-size: 0.7rem;
-    color: #1976D2;
-    line-height: 1.1;
+    color: var(--primary-dark);
 }
-
 
 .metric-value {
     font-size: 0.9rem;
@@ -249,14 +226,10 @@ canvas {
     color: #222;
 }
 
-
 .metric-sub {
     font-size: 0.65rem;
     color: #555;
-    line-height: 1.1;
 }
-
-
 
 /* =====================
    FOOTER
