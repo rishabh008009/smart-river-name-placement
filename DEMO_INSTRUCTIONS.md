@@ -1,6 +1,6 @@
 # Smart River Name Placement - Demo Instructions
 
-## Quick Start
+## Quick Start (dev)
 
 ### 1. Start the Application
 
