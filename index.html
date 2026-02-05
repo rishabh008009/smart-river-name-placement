@@ -5,64 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart River Name Placement - HACK ARENA 3.0</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Smart River Name Placement</h1>
-            <p class="subtitle">Intelligent text positioning for map visualization</p>
-            <p class="instructions">Click an example button to load a river, then customize the name or try your own coordinates!</p>
+            <div class="header-content">
+                <h1>🗺️ Smart River Name Placement</h1>
+                <p class="subtitle">Intelligent text positioning for map visualization</p>
+                <p class="instructions">Click an example button to see before/after comparison!</p>
+            </div>
         </header>
 
         <main>
-            <div class="canvas-container">
-                <canvas id="riverCanvas" width="800" height="600"></canvas>
-            </div>
-
-            <div class="controls-panel">
+            <!-- Top Controls Section -->
+            <div class="top-controls">
                 <section class="control-section">
-                    <h2>Examples</h2>
+                    <h2>📍 Examples</h2>
                     <div class="button-group">
-                        <button id="example1" class="example-btn">Straight River</button>
-                        <button id="example2" class="example-btn">Curved River</button>
-                        <button id="example3" class="example-btn">Complex River</button>
-                        <button id="loadWKT" class="wkt-btn">Load Hackathon River (WKT)</button>
+                        <button id="example1" class="example-btn">
+                            <span class="btn-icon">➡️</span>
+                            <span class="btn-text">Straight River</span>
+                        </button>
+                        <button id="example2" class="example-btn">
+                            <span class="btn-icon">〰️</span>
+                            <span class="btn-text">Curved River</span>
+                        </button>
+                        <button id="example3" class="example-btn">
+                            <span class="btn-icon">🌊</span>
+                            <span class="btn-text">Complex River</span>
+                        </button>
+                        <button id="loadWKT" class="wkt-btn">
+                            <span class="btn-icon">🏆</span>
+                            <span class="btn-text">Hackathon River (WKT)</span>
+                        </button>
                     </div>
                 </section>
 
                 <section class="control-section">
-                    <h2>River Name</h2>
+                    <h2>✏️ River Name</h2>
                     <input type="text" id="riverName" placeholder="Enter river name" value="Mississippi River">
-                    <button id="updateName">Update Name</button>
+                    <button id="updateName" class="action-btn">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">Update Name</span>
+                    </button>
                 </section>
 
                 <section class="control-section">
-                    <h2>Custom Coordinates</h2>
+                    <h2>📝 Custom Coordinates</h2>
                     <textarea id="customCoords" placeholder='Enter coordinates as JSON array: [[x1,y1], [x2,y2], ...]'></textarea>
-                    <button id="loadCustom">Load Custom River</button>
-                </section>
-
-                <section class="control-section">
-                    <h2>Visualization Options</h2>
-                    <label>
-                        <input type="checkbox" id="showRejected" checked>
-                        Show Rejected Areas
-                    </label>
-                    <label>
-                        <input type="checkbox" id="showCandidates" checked>
-                        Show Candidate Positions
-                    </label>
-                    <label>
-                        <input type="checkbox" id="showMetrics" checked>
-                        Show Metrics
-                    </label>
+                    <button id="loadCustom" class="action-btn">
+                        <span class="btn-icon">📥</span>
+                        <span class="btn-text">Load Custom River</span>
+                    </button>
                 </section>
             </div>
 
-            <div class="metrics-panel">
-                <div id="metrics-panel">
-                    <h3>Analysis Results</h3>
-                    <p>Load an example to see metrics...</p>
+            <!-- Canvas Section -->
+            <div class="canvas-section">
+                <div class="canvas-container">
+                    <h3 class="canvas-title">Before: Raw River Polygon</h3>
+                    <canvas id="beforeCanvas" width="600" height="450"></canvas>
+                </div>
+                
+                <div class="canvas-container">
+                    <h3 class="canvas-title">After: Smart Text Placement</h3>
+                    <canvas id="riverCanvas" width="600" height="450"></canvas>
+                </div>
+            </div>
+
+            <!-- Bottom Section -->
+            <div class="bottom-section">
+                <section class="control-section visualization-section">
+                    <h2>👁️ Visualization Options</h2>
+                    <div class="toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="showRejected" checked>
+                            <span class="toggle-text">Show Rejected Areas</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="showCandidates" checked>
+                            <span class="toggle-text">Show Candidate Positions</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="showMetrics" checked>
+                            <span class="toggle-text">Show Metrics</span>
+                        </label>
+                    </div>
+                </section>
+
+                <div class="metrics-panel">
+                    <div id="metrics-panel">
+                        <h3>📊 Analysis Results</h3>
+                        <p class="placeholder-text">Load an example to see metrics...</p>
+                    </div>
                 </div>
             </div>
 
@@ -70,7 +106,7 @@
         </main>
 
         <footer>
-            <p>HACK ARENA 3.0 - Smart River Name Placement System</p>
+            <p>HACK ARENA 3.0 - Smart River Name Placement System | Built with ❤️ using JavaScript</p>
         </footer>
     </div>
 

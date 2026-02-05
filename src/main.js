@@ -11,7 +11,7 @@ console.log('Smart River Name Placement System - Initializing...');
 let uiController;
 
 try {
-  uiController = new UIController('riverCanvas');
+  uiController = new UIController('riverCanvas', 'beforeCanvas');
   console.log('UIController initialized successfully');
 } catch (error) {
   console.error('Failed to initialize UIController:', error);

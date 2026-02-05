@@ -11,17 +11,20 @@ import { CanvasRenderer } from './CanvasRenderer.js';
 import { exampleRivers } from '../examples/rivers.js';
 
 export class UIController {
-  constructor(canvasId) {
+  constructor(canvasId, beforeCanvasId) {
     this.canvas = document.getElementById(canvasId);
     if (!this.canvas) {
       throw new Error(`Canvas element with id "${canvasId}" not found`);
     }
+
+    this.beforeCanvas = beforeCanvasId ? document.getElementById(beforeCanvasId) : null;
 
     this.parser = new RiverPathParser();
     this.analyzer = new GeometryAnalyzer();
     this.scorer = new PlacementScorer();
     this.placer = new TextPlacer();
     this.renderer = new CanvasRenderer(this.canvas);
+    this.beforeRenderer = this.beforeCanvas ? new CanvasRenderer(this.beforeCanvas) : null;
 
     this.currentRiver = null;
     this.currentRiverName = 'River Name';
@@ -178,6 +181,12 @@ export class UIController {
    * @param {number} startTime
    */
   renderPipeline(startTime) {
+    // Render "before" view (raw polygon without analysis)
+    if (this.beforeRenderer) {
+      this.beforeRenderer.clear();
+      this.beforeRenderer.drawRiver(this.currentRiver);
+    }
+
     // Analyze geometry
     const metrics = this.analyzer.analyzeGeometry(this.currentRiver);
     
@@ -203,7 +212,7 @@ export class UIController {
       );
     }
     
-    // Render everything
+    // Render "after" view with analysis and text
     this.renderer.clear();
     this.renderer.drawRiver(this.currentRiver);
     
