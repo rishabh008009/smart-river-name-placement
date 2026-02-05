@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart River Name Placement - HACK ARENA 3.0</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Smart River Name Placement</h1>
+            <p class="subtitle">Intelligent text positioning for map visualization</p>
+            <p class="instructions">Click an example button to load a river, then customize the name or try your own coordinates!</p>
+        </header>
+
+        <main>
+            <div class="canvas-container">
+                <canvas id="riverCanvas" width="800" height="600"></canvas>
+            </div>
+
+            <div class="controls-panel">
+                <section class="control-section">
+                    <h2>Examples</h2>
+                    <div class="button-group">
+                        <button id="example1" class="example-btn">Straight River</button>
+                        <button id="example2" class="example-btn">Curved River</button>
+                        <button id="example3" class="example-btn">Complex River</button>
+                        <button id="loadWKT" class="wkt-btn">Load Hackathon River (WKT)</button>
+                    </div>
+                </section>
+
+                <section class="control-section">
+                    <h2>River Name</h2>
+                    <input type="text" id="riverName" placeholder="Enter river name" value="Mississippi River">
+                    <button id="updateName">Update Name</button>
+                </section>
+
+                <section class="control-section">
+                    <h2>Custom Coordinates</h2>
+                    <textarea id="customCoords" placeholder='Enter coordinates as JSON array: [[x1,y1], [x2,y2], ...]'></textarea>
+                    <button id="loadCustom">Load Custom River</button>
+                </section>
+
+                <section class="control-section">
+                    <h2>Visualization Options</h2>
+                    <label>
+                        <input type="checkbox" id="showRejected" checked>
+                        Show Rejected Areas
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showCandidates" checked>
+                        Show Candidate Positions
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showMetrics" checked>
+                        Show Metrics
+                    </label>
+                </section>
+            </div>
+
+            <div class="metrics-panel">
+                <div id="metrics-panel">
+                    <h3>Analysis Results</h3>
+                    <p>Load an example to see metrics...</p>
+                </div>
+            </div>
+
+            <div id="error-panel" class="error-display" style="display: none;"></div>
+        </main>
+
+        <footer>
+            <p>HACK ARENA 3.0 - Smart River Name Placement System</p>
+        </footer>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
