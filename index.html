@@ -13,103 +13,153 @@
             <div class="header-content">
                 <h1>🗺️ Smart River Name Placement</h1>
                 <p class="subtitle">Intelligent text positioning for map visualization</p>
-                <p class="instructions">Click an example button to see before/after comparison!</p>
             </div>
         </header>
 
         <main>
-            <!-- Top Controls Section -->
-            <div class="top-controls">
-                <section class="control-section">
-                    <h2>📍 Examples</h2>
-                    <div class="button-group">
-                        <button id="example1" class="example-btn">
-                            <span class="btn-icon">➡️</span>
-                            <span class="btn-text">Straight River</span>
-                        </button>
-                        <button id="example2" class="example-btn">
-                            <span class="btn-icon">〰️</span>
-                            <span class="btn-text">Curved River</span>
-                        </button>
-                        <button id="example3" class="example-btn">
-                            <span class="btn-icon">🌊</span>
-                            <span class="btn-text">Complex River</span>
-                        </button>
-                        <button id="loadWKT" class="wkt-btn">
-                            <span class="btn-icon">🏆</span>
-                            <span class="btn-text">Hackathon River (WKT)</span>
-                        </button>
-                    </div>
-                </section>
-
-                <section class="control-section">
-                    <h2>✏️ River Name</h2>
-                    <input type="text" id="riverName" placeholder="Enter river name" value="Mississippi River">
-                    <button id="updateName" class="action-btn">
-                        <span class="btn-icon">🔄</span>
-                        <span class="btn-text">Update Name</span>
-                    </button>
-                </section>
-
-                <section class="control-section">
-                    <h2>📝 Custom Coordinates</h2>
-                    <textarea id="customCoords" placeholder='Enter coordinates as JSON array: [[x1,y1], [x2,y2], ...]'></textarea>
-                    <button id="loadCustom" class="action-btn">
-                        <span class="btn-icon">📥</span>
-                        <span class="btn-text">Load Custom River</span>
-                    </button>
-                </section>
-            </div>
-
-            <!-- Canvas Section -->
-            <div class="canvas-section">
-                <div class="canvas-container">
-                    <h3 class="canvas-title">Before: Raw River Polygon</h3>
-                    <canvas id="beforeCanvas" width="600" height="450"></canvas>
+            <!-- Compact Control Bar -->
+            <div class="control-bar">
+                <div class="control-group">
+                    <label for="exampleSelect">📍 Examples</label>
+                    <select id="exampleSelect" class="styled-select">
+                        <option value="">Select an example...</option>
+                        <option value="example1">➡️ Straight River</option>
+                        <option value="example2">〰️ Curved River</option>
+                        <option value="example3">🌊 Complex River</option>
+                        <option value="wkt">🏆 Hackathon River (WKT)</option>
+                    </select>
                 </div>
-                
-                <div class="canvas-container">
-                    <h3 class="canvas-title">After: Smart Text Placement</h3>
-                    <canvas id="riverCanvas" width="600" height="450"></canvas>
+                <div class="control-group">
+                    <label>📂 Upload WKT</label>
+                    <input type="file" id="wktFileInput" accept=".wkt,.txt">
+                </div>
+
+
+                <div class="control-group">
+                    <label for="riverName">✏️ River Name</label>
+                    <div class="input-with-button">
+                        <input type="text" id="riverName" placeholder="Enter river name" value="Mississippi River">
+                        <button id="updateName" class="icon-btn" title="Update Name">🔄</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="customCoords">📝 Custom Coordinates</label>
+                    <div class="input-with-button">
+                        <input type="text" id="customCoords" placeholder='[[x1,y1], [x2,y2], ...]'>
+                        <button id="loadCustom" class="icon-btn" title="Load Custom">📥</button>
+                    </div>
+                </div>
+
+                <div class="control-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showRejected" checked>
+                        <span>Rejected</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showCandidates" checked>
+                        <span>Candidates</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showMetrics" checked>
+                        <span>Metrics</span>
+                    </label>
                 </div>
             </div>
 
-            <!-- Bottom Section -->
-            <div class="bottom-section">
-                <section class="control-section visualization-section">
-                    <h2>👁️ Visualization Options</h2>
-                    <div class="toggle-group">
-                        <label class="toggle-label">
-                            <input type="checkbox" id="showRejected" checked>
-                            <span class="toggle-text">Show Rejected Areas</span>
-                        </label>
-                        <label class="toggle-label">
-                            <input type="checkbox" id="showCandidates" checked>
-                            <span class="toggle-text">Show Candidate Positions</span>
-                        </label>
-                        <label class="toggle-label">
-                            <input type="checkbox" id="showMetrics" checked>
-                            <span class="toggle-text">Show Metrics</span>
-                        </label>
-                    </div>
-                </section>
-
-                <div class="metrics-panel">
-                    <div id="metrics-panel">
-                        <h3>📊 Analysis Results</h3>
-                        <p class="placeholder-text">Load an example to see metrics...</p>
+            <!-- Canvas Comparison Section -->
+            <div class="canvas-comparison">
+                <div class="canvas-wrapper">
+                    <div class="canvas-header">Before: Raw River Polygon</div>
+                    <div class="canvas-container">
+                        <canvas id="beforeCanvas"></canvas>
                     </div>
                 </div>
+
+                <div class="canvas-divider">
+                    <div class="divider-line"></div>
+                    <div class="divider-icon">→</div>
+                    <div class="divider-line"></div>
+                </div>
+
+                <div class="canvas-wrapper">
+                    <div class="canvas-header">After: Smart Text Placement</div>
+                    <div class="canvas-container">
+                        <canvas id="riverCanvas"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible Metrics Section -->
+            <div class="metrics-bar" id="metrics-bar"></div>
+
             </div>
 
             <div id="error-panel" class="error-display" style="display: none;"></div>
         </main>
 
+        <!-- Hidden buttons for backward compatibility with existing JS -->
+        <div style="display: none;">
+            <button id="example1"></button>
+            <button id="example2"></button>
+            <button id="example3"></button>
+            <button id="loadWKT"></button>
+        </div>
+
         <footer>
-            <p>HACK ARENA 3.0 - Smart River Name Placement System | Built with ❤️ using JavaScript</p>
+            <p>HACK ARENA 3.0 - Smart River Name Placement System</p>
         </footer>
     </div>
 
     <script type="module" src="src/main.js"></script>
+    <script>
+        // Handle example dropdown - trigger the actual button clicks
+        document.getElementById('exampleSelect').addEventListener('change', function(e) {
+            const value = e.target.value;
+            if (value) {
+                // Find and click the corresponding button
+                const buttonMap = {
+                    'example1': 'example1',
+                    'example2': 'example2',
+                    'example3': 'example3',
+                    'wkt': 'loadWKT'
+                };
+                
+                const buttonId = buttonMap[value];
+                if (buttonId) {
+                    const button = document.getElementById(buttonId);
+                    if (button) {
+                        button.click();
+                    }
+                }
+            }
+        });
+
+        // Handle metrics toggle
+        const metricsToggle = document.getElementById('metricsToggle');
+        const metricsContent = document.getElementById('metricsContent');
+        
+        metricsToggle.addEventListener('click', function() {
+            const icon = this.querySelector('.toggle-icon');
+            if (metricsContent.style.maxHeight) {
+                metricsContent.style.maxHeight = null;
+                icon.textContent = '▼';
+            } else {
+                metricsContent.style.maxHeight = metricsContent.scrollHeight + 'px';
+                icon.textContent = '▲';
+            }
+        });
+
+        // Auto-expand metrics when content changes
+        const observer = new MutationObserver(() => {
+            if (metricsContent.style.maxHeight) {
+                metricsContent.style.maxHeight = metricsContent.scrollHeight + 'px';
+            }
+        });
+        observer.observe(document.getElementById('metrics-panel'), { 
+            childList: true, 
+            subtree: true 
+        });
+    </script>
 </body>
 </html>

@@ -281,12 +281,12 @@ export class GeometryAnalyzer {
     const curvatures = this.calculateCurvature(path);
     
     // Find sharp curves (default threshold: 30 degrees per unit)
-    const sharpCurves = this.findSharpCurves(path, 30);
+    const sharpCurves = this.findSharpCurves(path, 2);
     
     // Find narrow sections if width data exists
     // Use a reasonable minimum width threshold (e.g., 10 units)
     const narrowSections = path.widths && path.widths.length > 0 
-      ? this.findNarrowSections(path, 10)
+      ? this.findNarrowSections(path, 1)
       : [];
     
     // Get edge sections (first/last 10% of path)
@@ -312,7 +312,11 @@ export class GeometryAnalyzer {
       narrowSections,
       edgeSections,
       avgCurvature,
-      maxCurvature
+      maxCurvature,
+      rejectedSegments: [
+        ...sharpCurves,
+        ...narrowSections
+      ],
     };
   }
 

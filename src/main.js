@@ -76,6 +76,15 @@ document.getElementById('showMetrics')?.addEventListener('change', (e) => {
   uiController.toggleVisualization('metrics', e.target.checked);
 });
 
+document.getElementById('wktFileInput')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  uiController.loadWKTFromString(text);
+});
+
+
 // Load the first example by default
 if (uiController) {
   setTimeout(() => {

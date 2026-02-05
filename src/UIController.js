@@ -82,6 +82,24 @@ export class UIController {
     }
   }
 
+  loadWKTFromString(wktString) {
+    try {
+      const startTime = performance.now();
+
+      this.currentRiver = this.parser.parse(wktString);
+      if (this.currentRiver instanceof Error) {
+        throw this.currentRiver;
+      }
+
+      this.currentRiverName = 'Custom WKT River';
+      this.renderPipeline(startTime);
+      this.clearError();
+    } catch (error) {
+      this.displayError(`Invalid WKT file: ${error.message}`);
+    }
+  }
+
+
   /**
    * Load and display example river
    * @param {string} exampleId
@@ -173,12 +191,15 @@ export class UIController {
       this.showCandidates = enabled;
     } else if (option === 'metrics') {
       this.showMetrics = enabled;
+
+      const bar = document.getElementById('metrics-bar');
+      if (bar) {
+        bar.style.display = enabled ? 'flex' : 'none';
+      }
     }
 
-    // Re-render if we have a river loaded
     if (this.currentRiver) {
-      const startTime = performance.now();
-      this.renderPipeline(startTime);
+      this.renderPipeline(performance.now());
     }
   }
 
@@ -187,6 +208,10 @@ export class UIController {
    * @param {number} startTime
    */
   renderPipeline(startTime) {
+
+    this.renderer.resizeToParent();
+    this.beforeRenderer?.resizeToParent();
+
     // Render "before" view (raw polygon without analysis)
     if (this.beforeRenderer) {
       this.beforeRenderer.clear();
@@ -230,7 +255,10 @@ export class UIController {
       this.renderer.drawCandidates(
         this.currentRiver,
         candidates,
-        placement ? placement.segment : null
+        placement ? placement.segment : null,
+        {
+          showScores: this.showMetrics   // 🔥 checkbox now controls canvas metrics
+        }
       );
     }
     
@@ -242,8 +270,16 @@ export class UIController {
     const endTime = performance.now();
     const processingTime = endTime - startTime;
     
+    const bar = document.getElementById('metrics-bar');
+
     if (this.showMetrics) {
+      if (bar) bar.style.display = 'flex';
       this.displayMetrics(metrics, placement, candidates, result.warning, processingTime);
+    } else {
+      if (bar) {
+        bar.innerHTML = '';
+        bar.style.display = 'none';
+      }
     }
   }
 
@@ -256,58 +292,63 @@ export class UIController {
    * @param {number} processingTime
    */
   displayMetrics(metrics, placement, candidates, warning, processingTime) {
-    const metricsPanel = document.getElementById('metrics-panel');
-    if (!metricsPanel) return;
+    const bar = document.getElementById('metrics-bar');
+    if (!bar) return;
 
-    let html = '<h3>Analysis Results</h3>';
-    
-    // Processing time
-    html += `<p><strong>Processing Time:</strong> ${processingTime.toFixed(2)}ms</p>`;
-    
-    // Warning if any
-    if (warning) {
-      html += `<p style="color: #f44336;"><strong>Warning:</strong> ${warning}</p>`;
-    }
-    
-    // Geometry metrics
-    html += '<h4>Geometry Metrics</h4>';
-    html += `<p><strong>Average Curvature:</strong> ${metrics.avgCurvature?.toFixed(2) || 'N/A'} deg/unit</p>`;
-    html += `<p><strong>Max Curvature:</strong> ${metrics.maxCurvature?.toFixed(2) || 'N/A'} deg/unit</p>`;
-    html += `<p><strong>Rejected Segments:</strong> ${metrics.rejectedSegments?.length || 0}</p>`;
-    
-    // Placement info
-    if (placement && placement.segment) {
-      html += '<h4>Selected Placement</h4>';
-      html += `<p><strong>Score:</strong> ${placement.score.toFixed(2)}/100</p>`;
-      html += `<p><strong>Position:</strong> Index ${placement.segment.startIdx} to ${placement.segment.endIdx}</p>`;
-      html += `<p><strong>Length:</strong> ${placement.segment.length.toFixed(2)} units</p>`;
-      
-      // Score breakdown
-      if (placement.scores) {
-        html += '<h4>Score Breakdown</h4>';
-        html += `<p>Curvature: ${placement.scores.curvature?.toFixed(1) || 'N/A'}</p>`;
-        html += `<p>Width: ${placement.scores.width?.toFixed(1) || 'N/A'}</p>`;
-        html += `<p>Position: ${placement.scores.position?.toFixed(1) || 'N/A'}</p>`;
-        html += `<p>Straightness: ${placement.scores.straightness?.toFixed(1) || 'N/A'}</p>`;
-      }
-      
-      // Top candidates
-      if (candidates && candidates.length > 0) {
-        html += '<h4>Top 3 Candidates</h4>';
-        const topCandidates = candidates
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 3);
-        
-        topCandidates.forEach((candidate, index) => {
-          html += `<p>${index + 1}. Score: ${candidate.score.toFixed(2)} (Index ${candidate.segment.startIdx}-${candidate.segment.endIdx})</p>`;
-        });
-      }
-    } else {
-      html += '<p><strong>Warning:</strong> No suitable placement found</p>';
-    }
-    
-    metricsPanel.innerHTML = html;
+    const topCandidates = (candidates || [])
+      .slice()
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    bar.innerHTML = `
+      <div class="metric-col">
+        <div class="metric-title">Performance</div>
+        <div class="metric-value">${processingTime.toFixed(2)} ms</div>
+      </div>
+
+      <div class="metric-col">
+        <div class="metric-title">Curvature</div>
+        <div class="metric-value">${metrics.avgCurvature?.toFixed(2) ?? '–'}</div>
+        <div class="metric-sub">Max: ${metrics.maxCurvature?.toFixed(2) ?? '–'}</div>
+      </div>
+
+      <div class="metric-col">
+        <div class="metric-title">Rejected Segments</div>
+        <div class="metric-value">${metrics.rejectedSegments?.length ?? 0}</div>
+      </div>
+
+      <div class="metric-col">
+        <div class="metric-title">Placement Score</div>
+        <div class="metric-value">
+          ${placement?.score?.toFixed(2) ?? 'N/A'}
+        </div>
+        <div class="metric-sub">
+          ${placement
+            ? `Idx ${placement.segment.startIdx}–${placement.segment.endIdx}`
+            : '—'}
+        </div>
+      </div>
+
+      <div class="metric-col">
+        <div class="metric-title">Score Breakdown</div>
+        <div class="metric-sub">Curv ${placement?.scores?.curvature?.toFixed(1) ?? '–'}</div>
+        <div class="metric-sub">Width ${placement?.scores?.width?.toFixed(1) ?? '–'}</div>
+        <div class="metric-sub">Pos ${placement?.scores?.position?.toFixed(1) ?? '–'}</div>
+        <div class="metric-sub">Straight ${placement?.scores?.straightness?.toFixed(1) ?? '–'}</div>
+      </div>
+
+      <div class="metric-col">
+        <div class="metric-title">Top Candidates</div>
+        ${topCandidates
+          .map(
+            (c, i) =>
+              `<div class="metric-sub">${i + 1}. ${c.score.toFixed(1)}</div>`
+          )
+          .join('')}
+      </div>
+    `;
   }
+
 
   /**
    * Display error message

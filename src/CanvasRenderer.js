@@ -13,59 +13,71 @@ export class CanvasRenderer {
   }
 
   /**
-   * Clear the canvas
+   * Resize canvas to match parent container
+   */
+  resizeToParent() {
+    const parent = this.canvas.parentElement;
+    if (!parent) return;
+
+    const rect = parent.getBoundingClientRect();
+    this.canvas.width = rect.width;
+    this.canvas.height = rect.height;
+  }
+
+  /**
+   * Reset transform and clear canvas safely
    */
   clear() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    // Reset any transformations
+    this.ctx.save();
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.restore();
   }
 
   /**
    * Calculate and apply transformation to fit river in canvas
-   * @param {RiverPath} path
    */
   fitToCanvas(path) {
     if (!path || !path.bounds) return;
 
-    const bounds = path.bounds;
+    const { minX, maxX, minY, maxY } = path.bounds;
     const padding = 40;
 
-    // Calculate data dimensions
-    const dataWidth = bounds.maxX - bounds.minX;
-    const dataHeight = bounds.maxY - bounds.minY;
+    const dataWidth = maxX - minX;
+    const dataHeight = maxY - minY;
 
-    // Calculate available canvas space
-    const availableWidth = this.canvas.width - 2 * padding;
-    const availableHeight = this.canvas.height - 2 * padding;
+    if (dataWidth === 0 || dataHeight === 0) return;
 
-    // Calculate scale to fit (maintain aspect ratio)
-    const scaleX = availableWidth / dataWidth;
-    const scaleY = availableHeight / dataHeight;
-    const scale = Math.min(scaleX, scaleY);
+    const availableWidth = this.canvas.width - padding * 2;
+    const availableHeight = this.canvas.height - padding * 2;
 
-    // Calculate offsets to center
-    const scaledWidth = dataWidth * scale;
-    const scaledHeight = dataHeight * scale;
-    const offsetX = padding + (availableWidth - scaledWidth) / 2 - bounds.minX * scale;
-    const offsetY = padding + (availableHeight - scaledHeight) / 2 - bounds.minY * scale;
+    const scale = Math.min(
+      availableWidth / dataWidth,
+      availableHeight / dataHeight
+    );
 
-    // Apply transformation
+    const offsetX =
+      padding +
+      (availableWidth - dataWidth * scale) / 2 -
+      minX * scale;
+
+    const offsetY =
+      padding +
+      (availableHeight - dataHeight * scale) / 2 -
+      minY * scale;
+
     this.ctx.translate(offsetX, offsetY);
     this.ctx.scale(scale, scale);
   }
 
   /**
-   * Draw river path with optional width visualization
-   * @param {RiverPath} path - River path object with points and optional widths
-   * @param {RenderOptions} options - Rendering options
+   * Draw river path
    */
   drawRiver(path, options = {}) {
-    if (!path || !path.points || path.points.length < 2) {
-      return;
-    }
-
-    // Apply transformation to fit river in canvas
+    if (!path || !path.points || path.points.length < 2) return;
+    this._lastPath = path;
+    this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.fitToCanvas(path);
 
     const {
@@ -75,15 +87,14 @@ export class CanvasRenderer {
     } = options;
 
     const points = path.points;
-    const hasWidthData = path.widths && path.widths.length === points.length;
+    const hasWidthData =
+      useVariableWidth &&
+      path.widths &&
+      path.widths.length === points.length;
 
-    this.ctx.save();
-
-    // If we have width data and variable width is enabled, draw with variable width
-    if (hasWidthData && useVariableWidth) {
+    if (hasWidthData) {
       this._drawVariableWidthRiver(path, color);
     } else {
-      // Draw constant-width river
       this.ctx.strokeStyle = color;
       this.ctx.lineWidth = lineWidth;
       this.ctx.lineCap = 'round';
@@ -91,11 +102,9 @@ export class CanvasRenderer {
 
       this.ctx.beginPath();
       this.ctx.moveTo(points[0].x, points[0].y);
-
       for (let i = 1; i < points.length; i++) {
         this.ctx.lineTo(points[i].x, points[i].y);
       }
-
       this.ctx.stroke();
     }
 
@@ -103,103 +112,73 @@ export class CanvasRenderer {
   }
 
   /**
-   * Draw river with variable width based on width profile
-   * @private
-   * @param {RiverPath} path
-   * @param {string} color
+   * Variable-width river drawing
    */
   _drawVariableWidthRiver(path, color) {
-    const points = path.points;
-    const widths = path.widths;
-
+    const { points, widths } = path;
     this.ctx.fillStyle = color;
 
-    // Draw the river as a series of trapezoids between consecutive points
     for (let i = 0; i < points.length - 1; i++) {
       const p1 = points[i];
       const p2 = points[i + 1];
       const w1 = widths[i] || 3;
       const w2 = widths[i + 1] || 3;
 
-      // Calculate perpendicular direction
       const dx = p2.x - p1.x;
       const dy = p2.y - p1.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
+      const len = Math.hypot(dx, dy);
+      if (len === 0) continue;
 
-      if (length === 0) continue;
+      const px = -dy / len;
+      const py = dx / len;
 
-      // Normalized perpendicular vector
-      const perpX = -dy / length;
-      const perpY = dx / length;
-
-      // Calculate the four corners of the trapezoid
-      const x1Left = p1.x + perpX * w1 / 2;
-      const y1Left = p1.y + perpY * w1 / 2;
-      const x1Right = p1.x - perpX * w1 / 2;
-      const y1Right = p1.y - perpY * w1 / 2;
-
-      const x2Left = p2.x + perpX * w2 / 2;
-      const y2Left = p2.y + perpY * w2 / 2;
-      const x2Right = p2.x - perpX * w2 / 2;
-      const y2Right = p2.y - perpY * w2 / 2;
-
-      // Draw the trapezoid
       this.ctx.beginPath();
-      this.ctx.moveTo(x1Left, y1Left);
-      this.ctx.lineTo(x2Left, y2Left);
-      this.ctx.lineTo(x2Right, y2Right);
-      this.ctx.lineTo(x1Right, y1Right);
+      this.ctx.moveTo(p1.x + px * w1 / 2, p1.y + py * w1 / 2);
+      this.ctx.lineTo(p2.x + px * w2 / 2, p2.y + py * w2 / 2);
+      this.ctx.lineTo(p2.x - px * w2 / 2, p2.y - py * w2 / 2);
+      this.ctx.lineTo(p1.x - px * w1 / 2, p1.y - py * w1 / 2);
       this.ctx.closePath();
       this.ctx.fill();
     }
   }
 
   /**
-   * Draw text along path using character placements
-   * @param {Array<CharacterPlacement>} placements - Array of character placements
-   * @param {TextOptions} options - Text rendering options
+   * Draw text placements
    */
   drawText(placements, options = {}) {
-    if (!placements || placements.length === 0) {
-      return;
-    }
+    if (!placements || placements.length === 0) return;
+
+    this.ctx.save();
+
+    // 🔥 THIS IS WHAT WAS MISSING
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.fitToCanvas(this._lastPath);
 
     const {
       fontSize = 16,
       fontFamily = 'Arial',
-      fillColor = '#000000',
-      strokeColor = '#FFFFFF',
+      fillColor = '#000',
+      strokeColor = '#FFF',
       strokeWidth = 3
     } = options;
 
-    this.ctx.save();
-
-    // Set font
     this.ctx.font = `${fontSize}px ${fontFamily}`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
-    // Draw each character at its calculated position and rotation
-    for (const placement of placements) {
+    for (const p of placements) {
       this.ctx.save();
+      this.ctx.translate(p.x, p.y);
+      this.ctx.rotate(p.angle);
 
-      // Translate to character position
-      this.ctx.translate(placement.x, placement.y);
-
-      // Rotate to character angle
-      this.ctx.rotate(placement.angle);
-
-      // Draw white outline for contrast
       if (strokeWidth > 0) {
-        this.ctx.strokeStyle = strokeColor;
         this.ctx.lineWidth = strokeWidth;
-        this.ctx.lineJoin = 'round';
-        this.ctx.strokeText(placement.char, 0, 0);
+        this.ctx.strokeStyle = strokeColor;
+        this.ctx.strokeText(p.char, 0, 0);
       }
 
-      // Draw black fill
       this.ctx.fillStyle = fillColor;
-      this.ctx.fillText(placement.char, 0, 0);
+      this.ctx.fillText(p.char, 0, 0);
 
       this.ctx.restore();
     }
@@ -208,47 +187,30 @@ export class CanvasRenderer {
   }
 
   /**
-   * Visualize rejected areas (sharp curves, narrow sections)
-   * @param {RiverPath} path - River path object
-   * @param {Array<Segment>} segments - Array of rejected segments
-   * @param {Object} options - Rendering options
+   * Draw rejected river segments
    */
   drawRejectedAreas(path, segments, options = {}) {
-    if (!segments || segments.length === 0 || !path || !path.points) {
-      return;
-    }
-
-    const {
-      color = 'rgba(255, 0, 0, 0.3)',
-      lineWidth = 8
-    } = options;
+    if (!path || !segments?.length) return;
 
     this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.fitToCanvas(path);
+
+    const { color = 'rgba(255,0,0,0.3)', lineWidth = 8 } = options;
 
     this.ctx.strokeStyle = color;
     this.ctx.lineWidth = lineWidth;
     this.ctx.lineCap = 'round';
-    this.ctx.lineJoin = 'round';
 
-    // Draw each rejected segment
-    for (const segment of segments) {
-      const points = path.points;
-      const startIdx = segment.startIdx;
-      const endIdx = segment.endIdx;
-
-      if (startIdx >= points.length || endIdx >= points.length) {
-        continue;
-      }
-
+    for (const seg of segments) {
       this.ctx.beginPath();
-      this.ctx.moveTo(points[startIdx].x, points[startIdx].y);
-
-      for (let i = startIdx + 1; i <= endIdx; i++) {
-        if (i < points.length) {
-          this.ctx.lineTo(points[i].x, points[i].y);
-        }
+      this.ctx.moveTo(
+        path.points[seg.startIdx].x,
+        path.points[seg.startIdx].y
+      );
+      for (let i = seg.startIdx + 1; i <= seg.endIdx; i++) {
+        this.ctx.lineTo(path.points[i].x, path.points[i].y);
       }
-
       this.ctx.stroke();
     }
 
@@ -256,75 +218,31 @@ export class CanvasRenderer {
   }
 
   /**
-   * Draw candidate positions with scores
-   * @param {RiverPath} path - River path object
-   * @param {Array<Candidate>} candidates - Array of candidate placements
-   * @param {Segment} selectedSegment - The selected optimal segment (optional)
-   * @param {Object} options - Rendering options
+   * Draw candidate placement markers
    */
   drawCandidates(path, candidates, selectedSegment = null, options = {}) {
-    if (!candidates || candidates.length === 0) {
-      return;
-    }
-
-    const {
-      candidateColor = 'rgba(0, 255, 0, 0.5)',
-      selectedColor = 'rgba(0, 255, 0, 1)',
-      circleRadius = 8,
-      fontSize = 12,
-      showScores = true
-    } = options;
+    if (!candidates?.length) return;
 
     this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.fitToCanvas(path);
 
-    // Draw each candidate
-    for (const candidate of candidates) {
-      const isSelected = selectedSegment && 
-        candidate.segment.startIdx === selectedSegment.startIdx &&
-        candidate.segment.endIdx === selectedSegment.endIdx;
+    const {
+      candidateColor = 'rgba(0,255,0,0.5)',
+      selectedColor = 'rgba(0,255,0,1)',
+      radius = 8
+    } = options;
 
-      const centerPoint = candidate.centerPoint;
+    for (const c of candidates) {
+      const isSelected =
+        selectedSegment &&
+        c.segment.startIdx === selectedSegment.startIdx &&
+        c.segment.endIdx === selectedSegment.endIdx;
 
-      // Draw circle at center point
       this.ctx.beginPath();
-      this.ctx.arc(centerPoint.x, centerPoint.y, circleRadius, 0, 2 * Math.PI);
+      this.ctx.arc(c.centerPoint.x, c.centerPoint.y, radius, 0, Math.PI * 2);
       this.ctx.fillStyle = isSelected ? selectedColor : candidateColor;
       this.ctx.fill();
-
-      // Draw border for selected candidate
-      if (isSelected) {
-        this.ctx.strokeStyle = '#00FF00';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-      }
-
-      // Draw score label if enabled
-      if (showScores) {
-        this.ctx.fillStyle = '#000000';
-        this.ctx.font = `${fontSize}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'top';
-        
-        const scoreText = candidate.score.toFixed(1);
-        const labelY = centerPoint.y + circleRadius + 2;
-        
-        // Draw white background for text
-        const textMetrics = this.ctx.measureText(scoreText);
-        const textWidth = textMetrics.width;
-        const padding = 2;
-        
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        this.ctx.fillRect(
-          centerPoint.x - textWidth / 2 - padding,
-          labelY - padding,
-          textWidth + padding * 2,
-          fontSize + padding * 2
-        );
-        
-        // Draw score text
-        this.ctx.fillStyle = '#000000';
-        this.ctx.fillText(scoreText, centerPoint.x, labelY);
-      }
     }
 
     this.ctx.restore();
