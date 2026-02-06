@@ -9,6 +9,12 @@ import { PlacementScorer } from './PlacementScorer.js';
 import { TextPlacer } from './TextPlacer.js';
 import { CanvasRenderer } from './CanvasRenderer.js';
 import { exampleRivers } from '../examples/rivers.js';
+const riverData = Object.values(exampleRivers);
+
+const uniqueRiverSegments = riverData.filter(
+  (segment, index, self) =>
+    index === self.findIndex(s => s.name === segment.name)
+);
 
 export class UIController {
   constructor(canvasId, beforeCanvasId) {

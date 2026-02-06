@@ -286,18 +286,3 @@ footer {
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(244, 67, 54, 0.25);
 }
-
-.error-display {
-    animation: errorFade 0.2s ease-out;
-}
-
-@keyframes errorFade {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
