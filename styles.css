@@ -76,6 +76,7 @@ main {
     gap: 0.5rem;
     padding: 0.5rem;
     min-height: 0;
+    overflow-y: auto;
 }
 
 /* =====================
@@ -264,4 +265,24 @@ footer {
     .control-bar {
         grid-template-columns: 1fr;
     }
+}
+
+.error-display {
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.75rem;
+
+    max-height: 6rem;
+    overflow-y: auto;
+
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border: 1.5px solid #f44336;
+    border-left: 5px solid #d32f2f;
+
+    color: #b71c1c;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.25);
 }
